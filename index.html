@@ -11,33 +11,15 @@
     <meta name="apple-mobile-web-app-title" content="Bahn-Bingo">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Bahn-Bingo">
-    <meta name="description" content="Das ultimative Bahn-Bingo Spiel für deine Zugfahrt">
+    <meta name="description" content="Das ultimative soziale Bahn-Bingo Spiel">
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="data:application/manifest+json,{
-        %22name%22:%22Bahn-Bingo%22,
-        %22short_name%22:%22BahnBingo%22,
-        %22description%22:%22Das%20ultimative%20Bahn-Bingo%20Spiel%20für%20deine%20Zugfahrt%22,
-        %22start_url%22:%22/%22,
-        %22display%22:%22standalone%22,
-        %22background_color%22:%22%23ffffff%22,
-        %22theme_color%22:%22%23667eea%22,
-        %22orientation%22:%22portrait%22,
-        %22icons%22:[
-            {
-                %22src%22:%22data:image/svg+xml,%253Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20512%20512'%253E%253Crect%20width='512'%20height='512'%20fill='%2523667eea'/%253E%253Ctext%20x='256'%20y='320'%20font-size='280'%20text-anchor='middle'%20fill='white'%253E🚂%253C/text%253E%253C/svg%253E%22,
-                %22sizes%22:%22512x512%22,
-                %22type%22:%22image/svg+xml%22,
-                %22purpose%22:%22any%20maskable%22
-            }
-        ]
-    }">
+    <title>Bahn-Bingo Social</title>
     
-    <!-- Fallback Icon for iOS -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23667eea' rx='30'/%3E%3Ctext x='90' y='120' font-size='100' text-anchor='middle' fill='white'%3E🚂%3C/text%3E%3C/svg%3E">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
-    <title>Bahn-Bingo PWA</title>
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <style>
         * {
             margin: 0;
@@ -54,34 +36,39 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             min-height: -webkit-fill-available;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
             position: relative;
         }
         
-        .install-prompt {
+        /* Login Screen */
+        .login-screen {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            display: none;
-            z-index: 1000;
-            animation: slideUp 0.3s ease;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 20px;
         }
         
-        .install-prompt.show {
-            display: block;
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease;
         }
         
         @keyframes slideUp {
             from {
-                transform: translateY(100px);
+                transform: translateY(50px);
                 opacity: 0;
             }
             to {
@@ -90,109 +77,194 @@
             }
         }
         
-        .install-prompt h3 {
+        .login-card h1 {
+            font-size: 2.5em;
             margin-bottom: 10px;
             color: #333;
         }
         
-        .install-prompt p {
+        .login-card p {
             color: #666;
-            margin-bottom: 15px;
-            font-size: 0.9em;
+            margin-bottom: 30px;
         }
         
-        .install-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .install-btn, .dismiss-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
+        .username-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            margin-bottom: 20px;
             transition: all 0.3s ease;
         }
         
-        .install-btn {
+        .username-input:focus {
+            outline: none;
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
         }
         
-        .dismiss-btn {
-            background: #f0f0f0;
-            color: #666;
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         
-        .container {
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .google-login-btn {
+            width: 100%;
+            padding: 15px;
+            background: white;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .google-login-btn:hover {
+            background: #f8f8f8;
+            transform: translateY(-2px);
+        }
+        
+        /* Navigation Bar */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #999;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+        }
+        
+        .nav-item:active {
+            transform: scale(0.95);
+        }
+        
+        .nav-icon {
+            font-size: 1.5em;
+            margin-bottom: 3px;
+        }
+        
+        .nav-label {
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+        
+        /* Screens */
+        .screen {
+            display: none;
+            padding-bottom: 80px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Profile Header */
+        .profile-header {
             background: white;
             border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 700px;
-            width: 100%;
-            position: relative;
-        }
-        
-        .offline-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            background: #ff6b6b;
-            color: white;
-            border-radius: 20px;
-            font-size: 0.8em;
-            display: none;
-        }
-        
-        .offline-indicator.show {
-            display: block;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.6;
-            }
-        }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2.2em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .subtitle {
-            text-align: center;
-            color: #666;
+            padding: 20px;
             margin-bottom: 20px;
-            font-style: italic;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .user-details h2 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .user-details p {
+            color: #666;
             font-size: 0.9em;
         }
         
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 10px;
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
         }
         
-        .stat {
+        .stat-item {
             text-align: center;
         }
         
         .stat-value {
-            font-size: 1.5em;
+            font-size: 1.8em;
             font-weight: bold;
             color: #667eea;
         }
@@ -202,6 +274,284 @@
             color: #666;
         }
         
+        /* Game Container */
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        /* Live Game Info */
+        .live-game-info {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .live-game-info h3 {
+            margin-bottom: 10px;
+        }
+        
+        .live-players {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .live-player {
+            background: rgba(255,255,255,0.3);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        /* Friends List */
+        .friends-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .friends-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .friend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .friend-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .friend-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .friend-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .friend-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .online-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ecc71;
+        }
+        
+        .offline-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #95a5a6;
+        }
+        
+        /* Leaderboard */
+        .leaderboard {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+        }
+        
+        .leaderboard h3 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            background: #e9ecef;
+        }
+        
+        .leaderboard-rank {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+        
+        .rank-1 {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+        }
+        
+        .rank-2 {
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            color: #333;
+        }
+        
+        .rank-3 {
+            background: linear-gradient(135deg, #cd7f32, #e4a853);
+            color: white;
+        }
+        
+        .rank-other {
+            background: #e9ecef;
+            color: #666;
+        }
+        
+        .leaderboard-player {
+            flex: 1;
+        }
+        
+        .leaderboard-score {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        /* Create Game Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            animation: bounceIn 0.5s ease;
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .modal-content h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .game-code-display {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .game-code {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 5px;
+        }
+        
+        .join-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.2em;
+            text-align: center;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .action-btn {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        /* Bingo Grid */
         .bingo-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -210,6 +560,7 @@
             border-radius: 10px;
             overflow: hidden;
             background: #333;
+            margin-bottom: 20px;
         }
         
         .header-cell {
@@ -289,100 +640,75 @@
             }
         }
         
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .btn {
-            flex: 1;
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        
-        .btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        
-        .btn.secondary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .win-modal {
+        /* Notifications */
+        .notification {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
+            z-index: 3000;
+            animation: slideInRight 0.5s ease;
         }
         
-        .win-modal.show {
-            display: flex;
-            animation: fadeIn 0.3s ease;
+        .notification.show {
+            display: block;
         }
         
-        @keyframes fadeIn {
+        @keyframes slideInRight {
             from {
+                transform: translateX(100%);
                 opacity: 0;
             }
             to {
+                transform: translateX(0);
                 opacity: 1;
             }
         }
         
-        .win-content {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 90%;
-            animation: bounceIn 0.5s ease;
+        .notification.success {
+            border-left: 4px solid #2ecc71;
         }
         
-        @keyframes bounceIn {
-            0% {
-                transform: scale(0.3);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.05);
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
+        .notification.error {
+            border-left: 4px solid #e74c3c;
         }
         
-        .win-content h2 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        .notification.info {
+            border-left: 4px solid #3498db;
         }
         
-        .win-content p {
-            color: #666;
-            margin-bottom: 20px;
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 4000;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
         @media (max-width: 600px) {
-            h1 {
-                font-size: 1.8em;
-            }
-            
             .bingo-cell {
                 font-size: 0.68em;
                 min-height: 70px;
@@ -395,517 +721,513 @@
                 padding: 8px;
             }
             
-            .stats {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-        
-        @media (min-width: 768px) {
-            .bingo-cell:hover {
-                background: #f0f0f0;
-                transform: scale(1.02);
-                z-index: 10;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-                position: relative;
-            }
-            
-            .btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            .action-buttons {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="offline-indicator" id="offlineIndicator">📵 Offline</div>
-        
-        <h1>🚂 BAHN-BINGO 🚂</h1>
-        <p class="subtitle">Tippe auf die Felder, wenn das Ereignis eintritt!</p>
-        
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value" id="markedCount">0</div>
-                <div class="stat-label">Markiert</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="gamesWon">0</div>
-                <div class="stat-label">Gewonnen</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="totalGames">0</div>
-                <div class="stat-label">Gespielt</div>
-            </div>
-        </div>
-        
-        <div class="bingo-grid">
-            <!-- Header Row -->
-            <div class="header-cell">B</div>
-            <div class="header-cell">I</div>
-            <div class="header-cell">N</div>
-            <div class="header-cell">G</div>
-            <div class="header-cell">O</div>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <h1>🚂 Bahn-Bingo</h1>
+            <p>Das soziale Bingo-Spiel für deine Bahnfahrt!</p>
             
-            <!-- Row 1 -->
-            <div class="bingo-cell">Verspätung über 10 Min</div>
-            <div class="bingo-cell">Defekte Klimaanlage</div>
-            <div class="bingo-cell">Zugausfall</div>
-            <div class="bingo-cell">Schreiende Kinder</div>
-            <div class="bingo-cell">WC außer Betrieb</div>
+            <input type="text" class="username-input" id="usernameInput" 
+                   placeholder="Dein Benutzername" maxlength="20">
             
-            <!-- Row 2 -->
-            <div class="bingo-cell">Gleis-änderung</div>
-            <div class="bingo-cell">"Personen im Gleis"</div>
-            <div class="bingo-cell">Anschluss verpasst</div>
-            <div class="bingo-cell">Überfüllter Zug</div>
-            <div class="bingo-cell">Kein WLAN</div>
+            <button class="login-btn" id="loginBtn" onclick="loginWithUsername()">
+                Los geht's!
+            </button>
             
-            <!-- Row 3 -->
-            <div class="bingo-cell">Technische Störung</div>
-            <div class="bingo-cell">Laute Musik/Telefonate</div>
-            <div class="bingo-cell free-space">FREI</div>
-            <div class="bingo-cell">Fehlende Wagen</div>
-            <div class="bingo-cell">Durchsage unklar</div>
-            
-            <!-- Row 4 -->
-            <div class="bingo-cell">Signal-störung</div>
-            <div class="bingo-cell">Außerplan-mäßiger Halt</div>
-            <div class="bingo-cell">Türbereich blockiert</div>
-            <div class="bingo-cell">Defekte Tür</div>
-            <div class="bingo-cell">Fahrrad-Chaos</div>
-            
-            <!-- Row 5 -->
-            <div class="bingo-cell">Notarzt-einsatz</div>
-            <div class="bingo-cell">Strecken-sperrung</div>
-            <div class="bingo-cell">Sitzplatz trotz Reservierung besetzt</div>
-            <div class="bingo-cell">Kein Sitzplatz frei</div>
-            <div class="bingo-cell">Zug fährt durch</div>
-        </div>
-        
-        <div class="button-group">
-            <button class="btn" onclick="resetBingo()">🔄 Neue Runde</button>
-            <button class="btn secondary" onclick="shareGame()">📤 Teilen</button>
+            <button class="google-login-btn" onclick="loginWithGoogle()">
+                <span>🔵</span> Mit Google anmelden
+            </button>
         </div>
     </div>
     
-    <div class="install-prompt" id="installPrompt">
-        <h3>App installieren! 📱</h3>
-        <p>Installiere Bahn-Bingo auf deinem Gerät für die beste Erfahrung - auch offline spielbar!</p>
-        <div class="install-buttons">
-            <button class="dismiss-btn" onclick="dismissInstall()">Später</button>
-            <button class="install-btn" onclick="installApp()">Installieren</button>
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+        <!-- Game Screen -->
+        <div class="screen active" id="gameScreen">
+            <div class="profile-header">
+                <div class="profile-info">
+                    <div class="avatar" id="userAvatar">?</div>
+                    <div class="user-details">
+                        <h2 id="userName">Spieler</h2>
+                        <p id="userStatus">Bereit zum Spielen!</p>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="gamesWonStat">0</div>
+                        <div class="stat-label">Gewonnen</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalGamesStat">0</div>
+                        <div class="stat-label">Gespielt</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="friendsCount">0</div>
+                        <div class="stat-label">Freunde</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="live-game-info" id="liveGameInfo" style="display: none;">
+                <h3>🎮 Live-Spiel läuft!</h3>
+                <p>Code: <strong id="gameCode">ABCD</strong></p>
+                <div class="live-players" id="livePlayers"></div>
+            </div>
+            
+            <div class="game-container">
+                <div class="bingo-grid" id="bingoGrid">
+                    <!-- Header Row -->
+                    <div class="header-cell">B</div>
+                    <div class="header-cell">I</div>
+                    <div class="header-cell">N</div>
+                    <div class="header-cell">G</div>
+                    <div class="header-cell">O</div>
+                    
+                    <!-- Bingo cells will be generated here -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="createGame()">
+                        🎮 Spiel erstellen
+                    </button>
+                    <button class="action-btn secondary" onclick="showJoinGame()">
+                        🔗 Spiel beitreten
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Friends Screen -->
+        <div class="screen" id="friendsScreen">
+            <div class="friends-section">
+                <h3>👥 Deine Freunde</h3>
+                <div id="friendsList">
+                    <p style="text-align: center; color: #999; padding: 20px;">
+                        Noch keine Freunde hinzugefügt.<br>
+                        Teile deinen Benutzernamen!
+                    </p>
+                </div>
+                
+                <input type="text" class="join-input" id="addFriendInput" 
+                       placeholder="Benutzername eingeben" style="margin-top: 20px;">
+                <button class="action-btn" onclick="addFriend()">
+                    Freund hinzufügen
+                </button>
+            </div>
+        </div>
+        
+        <!-- Leaderboard Screen -->
+        <div class="screen" id="leaderboardScreen">
+            <div class="leaderboard">
+                <h3>🏆 Rangliste</h3>
+                <div id="leaderboardList">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Screen -->
+        <div class="screen" id="profileScreen">
+            <div class="profile-header">
+                <div class="profile-info">
+                    <div class="avatar" id="profileAvatar">?</div>
+                    <div class="user-details">
+                        <h2 id="profileName">Spieler</h2>
+                        <p>Mitglied seit: <span id="memberSince">Heute</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="friends-section">
+                <h3>📊 Statistiken</h3>
+                <div class="profile-stats" style="padding: 0;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="winRate">0%</div>
+                        <div class="stat-label">Gewinnrate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgTime">--</div>
+                        <div class="stat-label">Ø Zeit</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="bestStreak">0</div>
+                        <div class="stat-label">Beste Serie</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons" style="margin-top: 20px;">
+                <button class="action-btn secondary" onclick="logout()">
+                    🚪 Abmelden
+                </button>
+                <button class="action-btn" onclick="shareProfile()">
+                    📤 Profil teilen
+                </button>
+            </div>
+        </div>
+        
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <div class="nav-item active" onclick="switchScreen('gameScreen')">
+                <div class="nav-icon">🎮</div>
+                <div class="nav-label">Spielen</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('friendsScreen')">
+                <div class="nav-icon">👥</div>
+                <div class="nav-label">Freunde</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('leaderboardScreen')">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-label">Rangliste</div>
+            </div>
+            <div class="nav-item" onclick="switchScreen('profileScreen')">
+                <div class="nav-icon">👤</div>
+                <div class="nav-label">Profil</div>
+            </div>
         </div>
     </div>
     
-    <div class="win-modal" id="winModal">
-        <div class="win-content">
-            <h2>🎉 BINGO! 🎉</h2>
-            <p>Du kennst die Deutsche Bahn wirklich gut! 😄</p>
-            <button class="btn" onclick="closeWinModal()">Weiter spielen</button>
+    <!-- Create/Join Game Modal -->
+    <div class="modal" id="gameModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Spiel erstellen</h3>
+            
+            <div class="game-code-display" id="gameCodeDisplay" style="display: none;">
+                <p>Teile diesen Code mit deinen Freunden:</p>
+                <div class="game-code" id="gameCodeText">ABCD</div>
+            </div>
+            
+            <input type="text" class="join-input" id="joinGameInput" 
+                   placeholder="CODE" maxlength="4" style="display: none;">
+            
+            <div class="action-buttons">
+                <button class="action-btn secondary" onclick="closeModal()">
+                    Abbrechen
+                </button>
+                <button class="action-btn" id="modalActionBtn" onclick="startGame()">
+                    Spiel starten
+                </button>
+            </div>
+            
+            <div id="waitingPlayers" style="margin-top: 20px; display: none;">
+                <p style="color: #666; text-align: center;">Warte auf Spieler...</p>
+                <div class="live-players" id="modalPlayers"></div>
+            </div>
         </div>
+    </div>
+    
+    <!-- Notifications -->
+    <div class="notification" id="notification"></div>
+    
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
     </div>
     
     <script>
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            // Create service worker code
-            const swCode = `
-                const CACHE_NAME = 'bahn-bingo-v1';
-                const urlsToCache = [
-                    '/',
-                    '/index.html'
-                ];
-                
-                self.addEventListener('install', event => {
-                    event.waitUntil(
-                        caches.open(CACHE_NAME)
-                            .then(cache => cache.addAll(urlsToCache))
-                    );
-                    self.skipWaiting();
-                });
-                
-                self.addEventListener('activate', event => {
-                    event.waitUntil(
-                        caches.keys().then(cacheNames => {
-                            return Promise.all(
-                                cacheNames.map(cacheName => {
-                                    if (cacheName !== CACHE_NAME) {
-                                        return caches.delete(cacheName);
-                                    }
-                                })
-                            );
-                        })
-                    );
-                    self.clients.claim();
-                });
-                
-                self.addEventListener('fetch', event => {
-                    event.respondWith(
-                        caches.match(event.request)
-                            .then(response => response || fetch(event.request))
-                            .catch(() => {
-                                return new Response('Offline - Bahn-Bingo ist trotzdem spielbar!', {
-                                    status: 200,
-                                    headers: { 'Content-Type': 'text/plain' }
-                                });
-                            })
-                    );
-                });
-            `;
-            
-            // Create service worker blob
-            const blob = new Blob([swCode], { type: 'application/javascript' });
-            const swUrl = URL.createObjectURL(blob);
-            
-            navigator.serviceWorker.register(swUrl).then(registration => {
-                console.log('Service Worker registered:', registration);
-            }).catch(error => {
-                console.log('Service Worker registration failed:', error);
-            });
+        // Firebase Configuration (you need to replace with your own)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_DEMO_KEY_REPLACE_THIS",
+            authDomain: "bahn-bingo.firebaseapp.com",
+            projectId: "bahn-bingo",
+            storageBucket: "bahn-bingo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+        
+        // Initialize Firebase (will work in demo mode without real config)
+        let firebase, auth, db, currentUser;
+        
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } catch (e) {
+            console.log("Firebase Demo Mode");
         }
         
-        // Event Pool with Categories to avoid similar events
+        // Event Pool
         const eventPool = {
             verspätung: [
                 "Verspätung über 10 Min",
                 "Verspätung über 20 Min", 
                 "Verspätung über 30 Min",
                 "Verspätung über 5 Min",
-                "Pünktliche Abfahrt",
-                "Aufholen von Verspätung"
+                "Pünktliche Abfahrt"
             ],
-            
             technik: [
                 "Defekte Klimaanlage",
                 "Defekte Heizung",
                 "Defekte Tür",
                 "Defektes WC",
                 "Kein WLAN",
-                "Kein Strom an Steckdosen",
-                "Defekte Beleuchtung",
+                "Kein Strom",
                 "Technische Störung"
             ],
-            
             durchsagen: [
                 "Durchsage unklar",
                 "Durchsage zu leise",
-                "Durchsage wiederholt sich",
-                "Widersprüchliche Durchsagen",
-                "Keine Durchsage",
-                "Durchsage nur auf Englisch"
+                "Durchsage wiederholt",
+                "Keine Durchsage"
             ],
-            
-            personal: [
-                "Kein Schaffner zu sehen",
-                "Schaffner schlecht gelaunt",
-                "Zugbegleiter hilfsbereit",
-                "Kontrolleur vergisst dich",
-                "Personal überfordert"
-            ],
-            
             mitreisende: [
                 "Schreiende Kinder",
-                "Laute Musik ohne Kopfhörer",
+                "Laute Musik",
                 "Lautes Telefonat",
-                "Füße auf dem Sitz",
-                "Betrunkene Mitreisende",
-                "Gruppe Fußballfans",
-                "Schnarchen",
-                "Geruchsbelästigung"
+                "Füße auf Sitz",
+                "Betrunkene",
+                "Fußballfans",
+                "Schnarchen"
             ],
-            
             zugprobleme: [
                 "Zugausfall",
                 "Zug fährt durch",
                 "Falscher Zugtyp",
-                "Zug endet vorzeitig",
                 "Ersatzverkehr",
-                "Zug überfüllt",
-                "Zug fast leer"
+                "Zug überfüllt"
             ],
-            
             gleise: [
                 "Gleisänderung",
-                "Gleis nicht ausgeschildert",
-                "Bahnsteig zu kurz",
-                "Falsches Gleis angezeigt"
+                "Falsches Gleis",
+                "Bahnsteig zu kurz"
             ],
-            
             strecke: [
                 "Signalstörung",
                 "Streckensperrung",
                 "Notarzteinsatz",
                 "Personen im Gleis",
                 "Polizeieinsatz",
-                "Weichenstörung",
-                "Bauarbeiten",
-                "Umleitung"
+                "Weichenstörung"
             ],
-            
-            türen: [
-                "Türbereich blockiert",
-                "Tür schließt nicht",
-                "Tür öffnet nicht",
-                "Falscher Türbereich"
-            ],
-            
-            gepäck: [
-                "Fahrrad-Chaos",
-                "Koffer blockiert Gang",
-                "Gepäckablage voll",
-                "Kinderwagen im Weg"
-            ],
-            
             sitzplätze: [
-                "Kein Sitzplatz frei",
-                "Sitzplatz trotz Reservierung besetzt",
-                "Reservierung gilt nicht",
+                "Kein Sitzplatz",
+                "Sitz besetzt",
                 "Sitz defekt",
-                "Tisch klebrig",
-                "Müll auf Sitzplatz"
+                "Tisch klebrig"
             ],
-            
             halt: [
-                "Außerplan-mäßiger Halt",
+                "Außerplanmäßiger Halt",
                 "Halt entfällt",
-                "Längerer Halt",
                 "Halt auf freier Strecke"
             ],
-            
             anschluss: [
                 "Anschluss verpasst",
                 "Anschluss wartet",
-                "Anschluss-Chaos",
                 "Rennen zum Anschluss"
             ],
-            
             wagen: [
                 "Fehlende Wagen",
-                "Wagen in falscher Reihenfolge",
-                "Erste Klasse deklassiert",
-                "Zusätzliche Wagen"
-            ],
-            
-            restaurant: [
-                "Bordrestaurant geschlossen",
-                "Kein Kaffee mehr",
-                "Automat defekt",
-                "Nur Bargeld möglich"
-            ],
-            
-            wetter: [
-                "Klimaanlage bei Kälte",
-                "Heizung im Sommer",
-                "Zugluft",
-                "Fenster lässt sich nicht öffnen"
-            ],
-            
-            information: [
-                "App zeigt Falsches",
-                "Anzeigetafel defekt",
-                "Widersprüchliche Infos",
-                "Keine Information"
-            ],
-            
-            bahnhof: [
-                "Aufzug defekt",
-                "Rolltreppe kaputt",
-                "Bahnhof wird nicht angesagt",
-                "Kein Bahnsteig-Dach"
-            ],
-            
-            sonstiges: [
-                "Ticket gilt nicht",
-                "Automat nimmt Karte nicht",
-                "Handy-Akku leer",
-                "\"Wir bitten um Entschuldigung\"",
-                "Zug riecht komisch",
-                "Kaugummi am Sitz"
+                "Falsche Reihenfolge",
+                "Erste Klasse voll"
             ]
         };
         
-        // Function to generate random bingo board
+        // Game State
+        let gameState = {
+            username: '',
+            userId: '',
+            currentGameId: null,
+            isHost: false,
+            board: [],
+            marked: [],
+            stats: {
+                gamesWon: 0,
+                totalGames: 0,
+                friends: []
+            }
+        };
+        
+        // Demo Mode Data (when Firebase is not configured)
+        const demoData = {
+            users: {},
+            games: {},
+            leaderboard: [
+                { name: "ZugProfi", wins: 42 },
+                { name: "BahnMeister", wins: 38 },
+                { name: "VerspätungsKönig", wins: 35 },
+                { name: "GleisHeld", wins: 28 },
+                { name: "ICE_Rider", wins: 24 }
+            ]
+        };
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            generateBingoBoard();
+        });
+        
+        // Authentication
+        function checkAuth() {
+            const savedUser = localStorage.getItem('bahnBingoUser');
+            if (savedUser) {
+                gameState = JSON.parse(savedUser);
+                showMainApp();
+                updateUI();
+            }
+        }
+        
+        function loginWithUsername() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (username.length < 3) {
+                showNotification('Benutzername muss mindestens 3 Zeichen haben', 'error');
+                return;
+            }
+            
+            gameState.username = username;
+            gameState.userId = 'user_' + Date.now();
+            
+            // Save to localStorage
+            localStorage.setItem('bahnBingoUser', JSON.stringify(gameState));
+            
+            // Save to demo data
+            demoData.users[gameState.userId] = {
+                username: username,
+                stats: gameState.stats,
+                joinedAt: new Date().toISOString()
+            };
+            
+            showMainApp();
+            updateUI();
+            showNotification(`Willkommen ${username}! 🚂`, 'success');
+        }
+        
+        function loginWithGoogle() {
+            showNotification('Google Login kommt bald!', 'info');
+            // In real implementation: auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+        }
+        
+        function logout() {
+            localStorage.removeItem('bahnBingoUser');
+            location.reload();
+        }
+        
+        function showMainApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+        }
+        
+        // UI Updates
+        function updateUI() {
+            // Update user info
+            document.getElementById('userName').textContent = gameState.username;
+            document.getElementById('profileName').textContent = gameState.username;
+            document.getElementById('userAvatar').textContent = gameState.username[0].toUpperCase();
+            document.getElementById('profileAvatar').textContent = gameState.username[0].toUpperCase();
+            
+            // Update stats
+            document.getElementById('gamesWonStat').textContent = gameState.stats.gamesWon;
+            document.getElementById('totalGamesStat').textContent = gameState.stats.totalGames;
+            document.getElementById('friendsCount').textContent = gameState.stats.friends.length;
+            
+            // Calculate win rate
+            const winRate = gameState.stats.totalGames > 0 
+                ? Math.round((gameState.stats.gamesWon / gameState.stats.totalGames) * 100) 
+                : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
+            
+            // Update leaderboard
+            updateLeaderboard();
+        }
+        
+        // Screen Navigation
+        function switchScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show selected screen
+            document.getElementById(screenId).classList.add('active');
+            
+            // Update nav bar
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+        
+        // Bingo Board Generation
         function generateBingoBoard() {
             const selectedEvents = [];
             const usedCategories = new Set();
             
-            // We need 24 events (5x5 grid minus the FREE center space)
             while (selectedEvents.length < 24) {
-                // Get all categories that haven't been used yet
                 const availableCategories = Object.keys(eventPool).filter(cat => !usedCategories.has(cat));
                 
                 if (availableCategories.length === 0) {
-                    // Reset if we've used all categories but need more events
                     usedCategories.clear();
                     continue;
                 }
                 
-                // Pick a random category
                 const randomCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
                 const events = eventPool[randomCategory];
-                
-                // Pick a random event from this category
                 const randomEvent = events[Math.floor(Math.random() * events.length)];
                 
-                // Make sure we don't have duplicates
                 if (!selectedEvents.includes(randomEvent)) {
                     selectedEvents.push(randomEvent);
                     usedCategories.add(randomCategory);
                 }
             }
             
-            // Shuffle the selected events
+            // Shuffle
             for (let i = selectedEvents.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [selectedEvents[i], selectedEvents[j]] = [selectedEvents[j], selectedEvents[i]];
             }
             
-            // Insert FREE space in the middle (position 12)
             selectedEvents.splice(12, 0, "FREI");
+            gameState.board = selectedEvents;
             
-            return selectedEvents;
+            // Populate grid
+            const grid = document.getElementById('bingoGrid');
+            
+            // Clear existing cells (keep headers)
+            const headers = grid.querySelectorAll('.header-cell');
+            grid.innerHTML = '';
+            headers.forEach(h => grid.appendChild(h));
+            
+            // Add cells
+            selectedEvents.forEach((event, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'bingo-cell';
+                if (index === 12) {
+                    cell.className += ' free-space marked';
+                }
+                cell.textContent = event;
+                cell.onclick = () => markCell(index);
+                grid.appendChild(cell);
+            });
         }
         
-        // Function to populate the bingo grid
-        function populateBingoGrid() {
-            const events = generateBingoBoard();
+        function markCell(index) {
+            if (index === 12) return; // Free space
+            
             const cells = document.querySelectorAll('.bingo-cell');
+            cells[index].classList.toggle('marked');
             
-            cells.forEach((cell, index) => {
-                if (!cell.classList.contains('free-space')) {
-                    cell.textContent = events[index];
-                    cell.classList.remove('marked');
-                } else {
-                    // Keep FREE space
-                    cell.innerHTML = 'FREI';
-                    cell.classList.add('marked');
-                }
-            });
-            
-            // Add the star emoji back to FREE space
-            const freeSpace = document.querySelector('.free-space');
-            if (freeSpace && !freeSpace.innerHTML.includes('⭐')) {
-                const style = document.createElement('style');
-                style.textContent = `.free-space::after { content: "⭐"; display: block; font-size: 1.3em; margin-top: 3px; }`;
-                if (!document.head.querySelector('style[data-free-space]')) {
-                    style.setAttribute('data-free-space', 'true');
-                    document.head.appendChild(style);
-                }
+            if (cells[index].classList.contains('marked')) {
+                gameState.marked.push(index);
+            } else {
+                gameState.marked = gameState.marked.filter(i => i !== index);
             }
-        }
-        
-        // PWA Install Prompt
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
             
-            // Show install prompt after 3 seconds
-            setTimeout(() => {
-                document.getElementById('installPrompt').classList.add('show');
-            }, 3000);
-        });
-        
-        function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                        localStorage.setItem('appInstalled', 'true');
-                    }
-                    deferredPrompt = null;
-                    document.getElementById('installPrompt').classList.remove('show');
-                });
-            }
-        }
-        
-        function dismissInstall() {
-            document.getElementById('installPrompt').classList.remove('show');
-            // Show again after next reload unless installed
-            sessionStorage.setItem('installDismissed', 'true');
-        }
-        
-        // Check if already installed
-        window.addEventListener('appinstalled', (evt) => {
-            console.log('App installed');
-            document.getElementById('installPrompt').classList.remove('show');
-        });
-        
-        // Offline indicator
-        window.addEventListener('online', () => {
-            document.getElementById('offlineIndicator').classList.remove('show');
-        });
-        
-        window.addEventListener('offline', () => {
-            document.getElementById('offlineIndicator').classList.add('show');
-        });
-        
-        // Game Logic
-        let gameState = {
-            marked: [],
-            gamesWon: parseInt(localStorage.getItem('gamesWon') || 0),
-            totalGames: parseInt(localStorage.getItem('totalGames') || 0)
-        };
-        
-        // Initialize game on load
-        window.addEventListener('DOMContentLoaded', () => {
-            populateBingoGrid();
-            initializeGame();
-            updateStats();
-        });
-        
-        function initializeGame() {
-            // Add click event to all bingo cells
-            document.querySelectorAll('.bingo-cell').forEach((cell, index) => {
-                if (!cell.classList.contains('free-space')) {
-                    cell.removeEventListener('click', cellClickHandler);
-                    cell.addEventListener('click', cellClickHandler);
-                }
-            });
-            
-            // Free space is always marked
-            document.querySelector('.free-space').classList.add('marked');
-        }
-        
-        function cellClickHandler() {
-            this.classList.toggle('marked');
-            updateStats();
             checkWin();
             
-            // Haptic feedback if available
+            // Vibrate if available
             if (window.navigator.vibrate) {
                 window.navigator.vibrate(10);
             }
-        }
-        
-        // Initialize stats display
-        updateStats();
-        
-        function updateStats() {
-            document.getElementById('markedCount').textContent = 
-                document.querySelectorAll('.bingo-cell.marked').length;
-            document.getElementById('gamesWon').textContent = gameState.gamesWon;
-            document.getElementById('totalGames').textContent = gameState.totalGames;
-        }
-        
-        function resetBingo() {
-            // Generate new board
-            populateBingoGrid();
             
-            // Re-initialize click handlers
-            initializeGame();
-            
-            gameState.marked = [];
-            gameState.totalGames++;
-            localStorage.setItem('totalGames', gameState.totalGames);
-            updateStats();
-            
-            // Haptic feedback
-            if (window.navigator.vibrate) {
-                window.navigator.vibrate([20, 10, 20]);
+            // If in live game, update Firebase
+            if (gameState.currentGameId && db) {
+                updateLiveGame();
             }
         }
         
@@ -918,7 +1240,7 @@
             
             let won = false;
             
-            // Check rows
+            // Check rows, columns, diagonals
             for (let row of grid) {
                 if (row.every(cell => cell.classList.contains('marked'))) {
                     won = true;
@@ -926,7 +1248,6 @@
                 }
             }
             
-            // Check columns
             if (!won) {
                 for (let col = 0; col < 5; col++) {
                     if (grid.every(row => row[col].classList.contains('marked'))) {
@@ -936,7 +1257,6 @@
                 }
             }
             
-            // Check diagonals
             if (!won) {
                 if (grid.every((row, i) => row[i].classList.contains('marked'))) {
                     won = true;
@@ -952,63 +1272,248 @@
         }
         
         function celebrate() {
-            gameState.gamesWon++;
-            localStorage.setItem('gamesWon', gameState.gamesWon);
-            updateStats();
+            gameState.stats.gamesWon++;
+            gameState.stats.totalGames++;
+            localStorage.setItem('bahnBingoUser', JSON.stringify(gameState));
             
-            // Show win modal
+            showNotification('🎉 BINGO! Du hast gewonnen! 🎉', 'success');
+            
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate([100, 50, 100, 50, 200]);
+            }
+            
+            updateUI();
+            
             setTimeout(() => {
-                document.getElementById('winModal').classList.add('show');
-                
-                // Haptic celebration
-                if (window.navigator.vibrate) {
-                    window.navigator.vibrate([100, 50, 100, 50, 200]);
+                if (confirm('Neue Runde starten?')) {
+                    newGame();
                 }
-            }, 300);
+            }, 1000);
         }
         
-        function closeWinModal() {
-            document.getElementById('winModal').classList.remove('show');
-            resetBingo();
+        function newGame() {
+            gameState.marked = [];
+            generateBingoBoard();
+            gameState.stats.totalGames++;
+            localStorage.setItem('bahnBingoUser', JSON.stringify(gameState));
+            updateUI();
         }
         
-        function shareGame() {
-            const markedCount = document.querySelectorAll('.bingo-cell.marked').length;
-            const text = `Ich habe ${markedCount} Felder im Bahn-Bingo markiert! 🚂 Schon ${gameState.gamesWon} mal gewonnen! #BahnBingo #DeutscheBahn`;
+        // Multiplayer Functions
+        function createGame() {
+            const code = generateGameCode();
+            gameState.currentGameId = code;
+            gameState.isHost = true;
+            
+            document.getElementById('modalTitle').textContent = 'Spiel erstellt!';
+            document.getElementById('gameCodeDisplay').style.display = 'block';
+            document.getElementById('gameCodeText').textContent = code;
+            document.getElementById('joinGameInput').style.display = 'none';
+            document.getElementById('modalActionBtn').textContent = 'Spiel starten';
+            document.getElementById('waitingPlayers').style.display = 'block';
+            
+            document.getElementById('gameModal').classList.add('show');
+            
+            // Demo: Add to games
+            demoData.games[code] = {
+                host: gameState.username,
+                players: [gameState.username],
+                board: gameState.board,
+                createdAt: Date.now()
+            };
+        }
+        
+        function showJoinGame() {
+            document.getElementById('modalTitle').textContent = 'Spiel beitreten';
+            document.getElementById('gameCodeDisplay').style.display = 'none';
+            document.getElementById('joinGameInput').style.display = 'block';
+            document.getElementById('joinGameInput').value = '';
+            document.getElementById('modalActionBtn').textContent = 'Beitreten';
+            document.getElementById('modalActionBtn').onclick = joinGame;
+            document.getElementById('waitingPlayers').style.display = 'none';
+            
+            document.getElementById('gameModal').classList.add('show');
+        }
+        
+        function joinGame() {
+            const code = document.getElementById('joinGameInput').value.toUpperCase();
+            
+            if (demoData.games[code]) {
+                gameState.currentGameId = code;
+                gameState.board = demoData.games[code].board;
+                demoData.games[code].players.push(gameState.username);
+                
+                showNotification(`Spiel ${code} beigetreten!`, 'success');
+                closeModal();
+                startLiveGame();
+            } else {
+                showNotification('Ungültiger Spielcode!', 'error');
+            }
+        }
+        
+        function startGame() {
+            if (gameState.isHost) {
+                startLiveGame();
+                closeModal();
+            }
+        }
+        
+        function startLiveGame() {
+            document.getElementById('liveGameInfo').style.display = 'block';
+            document.getElementById('gameCode').textContent = gameState.currentGameId;
+            
+            // Update live players
+            if (demoData.games[gameState.currentGameId]) {
+                const players = demoData.games[gameState.currentGameId].players;
+                const playersHtml = players.map(p => 
+                    `<div class="live-player">${p}</div>`
+                ).join('');
+                document.getElementById('livePlayers').innerHTML = playersHtml;
+            }
+        }
+        
+        function updateLiveGame() {
+            // In real implementation: Update Firebase with marked cells
+            console.log('Updating live game...');
+        }
+        
+        function generateGameCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let code = '';
+            for (let i = 0; i < 4; i++) {
+                code += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return code;
+        }
+        
+        // Friends Functions
+        function addFriend() {
+            const friendName = document.getElementById('addFriendInput').value.trim();
+            if (!friendName) return;
+            
+            if (!gameState.stats.friends.includes(friendName)) {
+                gameState.stats.friends.push(friendName);
+                localStorage.setItem('bahnBingoUser', JSON.stringify(gameState));
+                updateUI();
+                updateFriendsList();
+                showNotification(`${friendName} wurde hinzugefügt!`, 'success');
+            } else {
+                showNotification('Bereits befreundet!', 'error');
+            }
+            
+            document.getElementById('addFriendInput').value = '';
+        }
+        
+        function updateFriendsList() {
+            const friendsList = document.getElementById('friendsList');
+            
+            if (gameState.stats.friends.length === 0) {
+                friendsList.innerHTML = `
+                    <p style="text-align: center; color: #999; padding: 20px;">
+                        Noch keine Freunde hinzugefügt.<br>
+                        Teile deinen Benutzernamen!
+                    </p>
+                `;
+                return;
+            }
+            
+            friendsList.innerHTML = gameState.stats.friends.map(friend => `
+                <div class="friend-item">
+                    <div class="friend-info">
+                        <div class="friend-avatar">${friend[0].toUpperCase()}</div>
+                        <div>
+                            <strong>${friend}</strong>
+                        </div>
+                    </div>
+                    <div class="friend-status">
+                        <div class="offline-indicator"></div>
+                        <span style="color: #999; font-size: 0.9em;">Offline</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Leaderboard
+        function updateLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            
+            // Add current user to demo leaderboard if not there
+            const currentUserInLeaderboard = demoData.leaderboard.find(p => p.name === gameState.username);
+            if (!currentUserInLeaderboard && gameState.username) {
+                demoData.leaderboard.push({
+                    name: gameState.username,
+                    wins: gameState.stats.gamesWon
+                });
+            } else if (currentUserInLeaderboard) {
+                currentUserInLeaderboard.wins = gameState.stats.gamesWon;
+            }
+            
+            // Sort by wins
+            const sorted = [...demoData.leaderboard].sort((a, b) => b.wins - a.wins);
+            
+            leaderboardList.innerHTML = sorted.slice(0, 10).map((player, index) => {
+                const rankClass = index === 0 ? 'rank-1' : 
+                                 index === 1 ? 'rank-2' : 
+                                 index === 2 ? 'rank-3' : 'rank-other';
+                
+                return `
+                    <div class="leaderboard-item">
+                        <div class="leaderboard-rank ${rankClass}">
+                            ${index + 1}
+                        </div>
+                        <div class="leaderboard-player">
+                            <strong>${player.name}</strong>
+                            ${player.name === gameState.username ? ' (Du)' : ''}
+                        </div>
+                        <div class="leaderboard-score">
+                            ${player.wins} 🏆
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Share Functions
+        function shareProfile() {
+            const text = `Ich bin ${gameState.username} bei Bahn-Bingo! 🚂\n` +
+                        `${gameState.stats.gamesWon} Spiele gewonnen!\n` +
+                        `Füge mich als Freund hinzu!`;
             
             if (navigator.share) {
                 navigator.share({
-                    title: 'Bahn-Bingo',
-                    text: text,
-                    url: window.location.href
-                }).catch(err => console.log('Error sharing:', err));
-            } else {
-                // Fallback: Copy to clipboard
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('Text in Zwischenablage kopiert!');
+                    title: 'Bahn-Bingo Profil',
+                    text: text
                 });
+            } else {
+                navigator.clipboard.writeText(text);
+                showNotification('Profil-Link kopiert!', 'success');
             }
         }
         
-        // Prevent pull-to-refresh on mobile
-        let lastTouchY = 0;
-        let preventPullToRefresh = false;
+        // Modal Functions
+        function closeModal() {
+            document.getElementById('gameModal').classList.remove('show');
+        }
         
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length !== 1) return;
-            lastTouchY = e.touches[0].clientY;
-            preventPullToRefresh = window.pageYOffset === 0;
-        });
-        
-        document.addEventListener('touchmove', (e) => {
-            const touchY = e.touches[0].clientY;
-            const touchYDelta = touchY - lastTouchY;
-            lastTouchY = touchY;
+        // Notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
             
-            if (preventPullToRefresh && touchYDelta > 0) {
-                e.preventDefault();
-            }
-        }, { passive: false });
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Loading
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
     </script>
 </body>
 </html>
