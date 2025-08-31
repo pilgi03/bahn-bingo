@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Bahn-Bingo">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Bahn-Bingo">
+    <meta name="description" content="Das ultimative Bahn-Bingo Spiel für deine Zugfahrt">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/manifest+json,{
+        %22name%22:%22Bahn-Bingo%22,
+        %22short_name%22:%22BahnBingo%22,
+        %22description%22:%22Das%20ultimative%20Bahn-Bingo%20Spiel%20für%20deine%20Zugfahrt%22,
+        %22start_url%22:%22/%22,
+        %22display%22:%22standalone%22,
+        %22background_color%22:%22%23ffffff%22,
+        %22theme_color%22:%22%23667eea%22,
+        %22orientation%22:%22portrait%22,
+        %22icons%22:[
+            {
+                %22src%22:%22data:image/svg+xml,%253Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20512%20512'%253E%253Crect%20width='512'%20height='512'%20fill='%2523667eea'/%253E%253Ctext%20x='256'%20y='320'%20font-size='280'%20text-anchor='middle'%20fill='white'%253E🚂%253C/text%253E%253C/svg%253E%22,
+                %22sizes%22:%22512x512%22,
+                %22type%22:%22image/svg+xml%22,
+                %22purpose%22:%22any%20maskable%22
+            }
+        ]
+    }">
+    
+    <!-- Fallback Icon for iOS -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23667eea' rx='30'/%3E%3Ctext x='90' y='120' font-size='100' text-anchor='middle' fill='white'%3E🚂%3C/text%3E%3C/svg%3E">
+    
+    <title>Bahn-Bingo PWA</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .install-prompt.show {
+            display: block;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .install-prompt h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .install-prompt p {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .install-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .install-btn, .dismiss-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .install-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .dismiss-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .offline-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8em;
+            display: none;
+        }
+        
+        .offline-indicator.show {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+            border: 3px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #333;
+        }
+        
+        .header-cell {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1.8em;
+            font-weight: bold;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #333;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .bingo-cell {
+            background: white;
+            border: 1px solid #333;
+            padding: 10px 6px;
+            text-align: center;
+            min-height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82em;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: visible;
+            word-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+        }
+        
+        .bingo-cell:active {
+            transform: scale(0.95);
+        }
+        
+        .bingo-cell.marked {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            color: #333;
+            font-weight: bold;
+            animation: markCell 0.5s ease;
+        }
+        
+        .bingo-cell.marked::before {
+            content: "✓";
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            color: #2ecc71;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .free-space {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .free-space::after {
+            content: "⭐";
+            display: block;
+            font-size: 1.3em;
+            margin-top: 3px;
+        }
+        
+        @keyframes markCell {
+            0% {
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                transform: scale(1.1) rotate(5deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .win-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .win-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .win-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            animation: bounceIn 0.5s ease;
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .win-content h2 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .win-content p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .bingo-cell {
+                font-size: 0.68em;
+                min-height: 70px;
+                padding: 6px 3px;
+                line-height: 1.15;
+            }
+            
+            .header-cell {
+                font-size: 1.3em;
+                padding: 8px;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .bingo-cell:hover {
+                background: #f0f0f0;
+                transform: scale(1.02);
+                z-index: 10;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                position: relative;
+            }
+            
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="offline-indicator" id="offlineIndicator">📵 Offline</div>
+        
+        <h1>🚂 BAHN-BINGO 🚂</h1>
+        <p class="subtitle">Tippe auf die Felder, wenn das Ereignis eintritt!</p>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="markedCount">0</div>
+                <div class="stat-label">Markiert</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="gamesWon">0</div>
+                <div class="stat-label">Gewonnen</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="totalGames">0</div>
+                <div class="stat-label">Gespielt</div>
+            </div>
+        </div>
+        
+        <div class="bingo-grid">
+            <!-- Header Row -->
+            <div class="header-cell">B</div>
+            <div class="header-cell">I</div>
+            <div class="header-cell">N</div>
+            <div class="header-cell">G</div>
+            <div class="header-cell">O</div>
+            
+            <!-- Row 1 -->
+            <div class="bingo-cell">Verspätung über 10 Min</div>
+            <div class="bingo-cell">Defekte Klimaanlage</div>
+            <div class="bingo-cell">Zugausfall</div>
+            <div class="bingo-cell">Schreiende Kinder</div>
+            <div class="bingo-cell">WC außer Betrieb</div>
+            
+            <!-- Row 2 -->
+            <div class="bingo-cell">Gleis-änderung</div>
+            <div class="bingo-cell">"Personen im Gleis"</div>
+            <div class="bingo-cell">Anschluss verpasst</div>
+            <div class="bingo-cell">Überfüllter Zug</div>
+            <div class="bingo-cell">Kein WLAN</div>
+            
+            <!-- Row 3 -->
+            <div class="bingo-cell">Technische Störung</div>
+            <div class="bingo-cell">Laute Musik/Telefonate</div>
+            <div class="bingo-cell free-space">FREI</div>
+            <div class="bingo-cell">Fehlende Wagen</div>
+            <div class="bingo-cell">Durchsage unklar</div>
+            
+            <!-- Row 4 -->
+            <div class="bingo-cell">Signal-störung</div>
+            <div class="bingo-cell">Außerplan-mäßiger Halt</div>
+            <div class="bingo-cell">Türbereich blockiert</div>
+            <div class="bingo-cell">Defekte Tür</div>
+            <div class="bingo-cell">Fahrrad-Chaos</div>
+            
+            <!-- Row 5 -->
+            <div class="bingo-cell">Notarzt-einsatz</div>
+            <div class="bingo-cell">Strecken-sperrung</div>
+            <div class="bingo-cell">Sitzplatz trotz Reservierung besetzt</div>
+            <div class="bingo-cell">Kein Sitzplatz frei</div>
+            <div class="bingo-cell">Zug fährt durch</div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn" onclick="resetBingo()">🔄 Neue Runde</button>
+            <button class="btn secondary" onclick="shareGame()">📤 Teilen</button>
+        </div>
+    </div>
+    
+    <div class="install-prompt" id="installPrompt">
+        <h3>App installieren! 📱</h3>
+        <p>Installiere Bahn-Bingo auf deinem Gerät für die beste Erfahrung - auch offline spielbar!</p>
+        <div class="install-buttons">
+            <button class="dismiss-btn" onclick="dismissInstall()">Später</button>
+            <button class="install-btn" onclick="installApp()">Installieren</button>
+        </div>
+    </div>
+    
+    <div class="win-modal" id="winModal">
+        <div class="win-content">
+            <h2>🎉 BINGO! 🎉</h2>
+            <p>Du kennst die Deutsche Bahn wirklich gut! 😄</p>
+            <button class="btn" onclick="closeWinModal()">Weiter spielen</button>
+        </div>
+    </div>
+    
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            // Create service worker code
+            const swCode = `
+                const CACHE_NAME = 'bahn-bingo-v1';
+                const urlsToCache = [
+                    '/',
+                    '/index.html'
+                ];
+                
+                self.addEventListener('install', event => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then(cache => cache.addAll(urlsToCache))
+                    );
+                    self.skipWaiting();
+                });
+                
+                self.addEventListener('activate', event => {
+                    event.waitUntil(
+                        caches.keys().then(cacheNames => {
+                            return Promise.all(
+                                cacheNames.map(cacheName => {
+                                    if (cacheName !== CACHE_NAME) {
+                                        return caches.delete(cacheName);
+                                    }
+                                })
+                            );
+                        })
+                    );
+                    self.clients.claim();
+                });
+                
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(response => response || fetch(event.request))
+                            .catch(() => {
+                                return new Response('Offline - Bahn-Bingo ist trotzdem spielbar!', {
+                                    status: 200,
+                                    headers: { 'Content-Type': 'text/plain' }
+                                });
+                            })
+                    );
+                });
+            `;
+            
+            // Create service worker blob
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl).then(registration => {
+                console.log('Service Worker registered:', registration);
+            }).catch(error => {
+                console.log('Service Worker registration failed:', error);
+            });
+        }
+        
+        // Event Pool with Categories to avoid similar events
+        const eventPool = {
+            verspätung: [
+                "Verspätung über 10 Min",
+                "Verspätung über 20 Min", 
+                "Verspätung über 30 Min",
+                "Verspätung über 5 Min",
+                "Pünktliche Abfahrt",
+                "Aufholen von Verspätung"
+            ],
+            
+            technik: [
+                "Defekte Klimaanlage",
+                "Defekte Heizung",
+                "Defekte Tür",
+                "Defektes WC",
+                "Kein WLAN",
+                "Kein Strom an Steckdosen",
+                "Defekte Beleuchtung",
+                "Technische Störung"
+            ],
+            
+            durchsagen: [
+                "Durchsage unklar",
+                "Durchsage zu leise",
+                "Durchsage wiederholt sich",
+                "Widersprüchliche Durchsagen",
+                "Keine Durchsage",
+                "Durchsage nur auf Englisch"
+            ],
+            
+            personal: [
+                "Kein Schaffner zu sehen",
+                "Schaffner schlecht gelaunt",
+                "Zugbegleiter hilfsbereit",
+                "Kontrolleur vergisst dich",
+                "Personal überfordert"
+            ],
+            
+            mitreisende: [
+                "Schreiende Kinder",
+                "Laute Musik ohne Kopfhörer",
+                "Lautes Telefonat",
+                "Füße auf dem Sitz",
+                "Betrunkene Mitreisende",
+                "Gruppe Fußballfans",
+                "Schnarchen",
+                "Geruchsbelästigung"
+            ],
+            
+            zugprobleme: [
+                "Zugausfall",
+                "Zug fährt durch",
+                "Falscher Zugtyp",
+                "Zug endet vorzeitig",
+                "Ersatzverkehr",
+                "Zug überfüllt",
+                "Zug fast leer"
+            ],
+            
+            gleise: [
+                "Gleisänderung",
+                "Gleis nicht ausgeschildert",
+                "Bahnsteig zu kurz",
+                "Falsches Gleis angezeigt"
+            ],
+            
+            strecke: [
+                "Signalstörung",
+                "Streckensperrung",
+                "Notarzteinsatz",
+                "Personen im Gleis",
+                "Polizeieinsatz",
+                "Weichenstörung",
+                "Bauarbeiten",
+                "Umleitung"
+            ],
+            
+            türen: [
+                "Türbereich blockiert",
+                "Tür schließt nicht",
+                "Tür öffnet nicht",
+                "Falscher Türbereich"
+            ],
+            
+            gepäck: [
+                "Fahrrad-Chaos",
+                "Koffer blockiert Gang",
+                "Gepäckablage voll",
+                "Kinderwagen im Weg"
+            ],
+            
+            sitzplätze: [
+                "Kein Sitzplatz frei",
+                "Sitzplatz trotz Reservierung besetzt",
+                "Reservierung gilt nicht",
+                "Sitz defekt",
+                "Tisch klebrig",
+                "Müll auf Sitzplatz"
+            ],
+            
+            halt: [
+                "Außerplan-mäßiger Halt",
+                "Halt entfällt",
+                "Längerer Halt",
+                "Halt auf freier Strecke"
+            ],
+            
+            anschluss: [
+                "Anschluss verpasst",
+                "Anschluss wartet",
+                "Anschluss-Chaos",
+                "Rennen zum Anschluss"
+            ],
+            
+            wagen: [
+                "Fehlende Wagen",
+                "Wagen in falscher Reihenfolge",
+                "Erste Klasse deklassiert",
+                "Zusätzliche Wagen"
+            ],
+            
+            restaurant: [
+                "Bordrestaurant geschlossen",
+                "Kein Kaffee mehr",
+                "Automat defekt",
+                "Nur Bargeld möglich"
+            ],
+            
+            wetter: [
+                "Klimaanlage bei Kälte",
+                "Heizung im Sommer",
+                "Zugluft",
+                "Fenster lässt sich nicht öffnen"
+            ],
+            
+            information: [
+                "App zeigt Falsches",
+                "Anzeigetafel defekt",
+                "Widersprüchliche Infos",
+                "Keine Information"
+            ],
+            
+            bahnhof: [
+                "Aufzug defekt",
+                "Rolltreppe kaputt",
+                "Bahnhof wird nicht angesagt",
+                "Kein Bahnsteig-Dach"
+            ],
+            
+            sonstiges: [
+                "Ticket gilt nicht",
+                "Automat nimmt Karte nicht",
+                "Handy-Akku leer",
+                "\"Wir bitten um Entschuldigung\"",
+                "Zug riecht komisch",
+                "Kaugummi am Sitz"
+            ]
+        };
+        
+        // Function to generate random bingo board
+        function generateBingoBoard() {
+            const selectedEvents = [];
+            const usedCategories = new Set();
+            
+            // We need 24 events (5x5 grid minus the FREE center space)
+            while (selectedEvents.length < 24) {
+                // Get all categories that haven't been used yet
+                const availableCategories = Object.keys(eventPool).filter(cat => !usedCategories.has(cat));
+                
+                if (availableCategories.length === 0) {
+                    // Reset if we've used all categories but need more events
+                    usedCategories.clear();
+                    continue;
+                }
+                
+                // Pick a random category
+                const randomCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+                const events = eventPool[randomCategory];
+                
+                // Pick a random event from this category
+                const randomEvent = events[Math.floor(Math.random() * events.length)];
+                
+                // Make sure we don't have duplicates
+                if (!selectedEvents.includes(randomEvent)) {
+                    selectedEvents.push(randomEvent);
+                    usedCategories.add(randomCategory);
+                }
+            }
+            
+            // Shuffle the selected events
+            for (let i = selectedEvents.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [selectedEvents[i], selectedEvents[j]] = [selectedEvents[j], selectedEvents[i]];
+            }
+            
+            // Insert FREE space in the middle (position 12)
+            selectedEvents.splice(12, 0, "FREI");
+            
+            return selectedEvents;
+        }
+        
+        // Function to populate the bingo grid
+        function populateBingoGrid() {
+            const events = generateBingoBoard();
+            const cells = document.querySelectorAll('.bingo-cell');
+            
+            cells.forEach((cell, index) => {
+                if (!cell.classList.contains('free-space')) {
+                    cell.textContent = events[index];
+                    cell.classList.remove('marked');
+                } else {
+                    // Keep FREE space
+                    cell.innerHTML = 'FREI';
+                    cell.classList.add('marked');
+                }
+            });
+            
+            // Add the star emoji back to FREE space
+            const freeSpace = document.querySelector('.free-space');
+            if (freeSpace && !freeSpace.innerHTML.includes('⭐')) {
+                const style = document.createElement('style');
+                style.textContent = `.free-space::after { content: "⭐"; display: block; font-size: 1.3em; margin-top: 3px; }`;
+                if (!document.head.querySelector('style[data-free-space]')) {
+                    style.setAttribute('data-free-space', 'true');
+                    document.head.appendChild(style);
+                }
+            }
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install prompt after 3 seconds
+            setTimeout(() => {
+                document.getElementById('installPrompt').classList.add('show');
+            }, 3000);
+        });
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                        localStorage.setItem('appInstalled', 'true');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').classList.remove('show');
+                });
+            }
+        }
+        
+        function dismissInstall() {
+            document.getElementById('installPrompt').classList.remove('show');
+            // Show again after next reload unless installed
+            sessionStorage.setItem('installDismissed', 'true');
+        }
+        
+        // Check if already installed
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('App installed');
+            document.getElementById('installPrompt').classList.remove('show');
+        });
+        
+        // Offline indicator
+        window.addEventListener('online', () => {
+            document.getElementById('offlineIndicator').classList.remove('show');
+        });
+        
+        window.addEventListener('offline', () => {
+            document.getElementById('offlineIndicator').classList.add('show');
+        });
+        
+        // Game Logic
+        let gameState = {
+            marked: [],
+            gamesWon: parseInt(localStorage.getItem('gamesWon') || 0),
+            totalGames: parseInt(localStorage.getItem('totalGames') || 0)
+        };
+        
+        // Initialize game on load
+        window.addEventListener('DOMContentLoaded', () => {
+            populateBingoGrid();
+            initializeGame();
+            updateStats();
+        });
+        
+        function initializeGame() {
+            // Add click event to all bingo cells
+            document.querySelectorAll('.bingo-cell').forEach((cell, index) => {
+                if (!cell.classList.contains('free-space')) {
+                    cell.removeEventListener('click', cellClickHandler);
+                    cell.addEventListener('click', cellClickHandler);
+                }
+            });
+            
+            // Free space is always marked
+            document.querySelector('.free-space').classList.add('marked');
+        }
+        
+        function cellClickHandler() {
+            this.classList.toggle('marked');
+            updateStats();
+            checkWin();
+            
+            // Haptic feedback if available
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate(10);
+            }
+        }
+        
+        // Initialize stats display
+        updateStats();
+        
+        function updateStats() {
+            document.getElementById('markedCount').textContent = 
+                document.querySelectorAll('.bingo-cell.marked').length;
+            document.getElementById('gamesWon').textContent = gameState.gamesWon;
+            document.getElementById('totalGames').textContent = gameState.totalGames;
+        }
+        
+        function resetBingo() {
+            // Generate new board
+            populateBingoGrid();
+            
+            // Re-initialize click handlers
+            initializeGame();
+            
+            gameState.marked = [];
+            gameState.totalGames++;
+            localStorage.setItem('totalGames', gameState.totalGames);
+            updateStats();
+            
+            // Haptic feedback
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate([20, 10, 20]);
+            }
+        }
+        
+        function checkWin() {
+            const cells = Array.from(document.querySelectorAll('.bingo-cell'));
+            const grid = [];
+            for (let i = 0; i < 5; i++) {
+                grid.push(cells.slice(i * 5, (i + 1) * 5));
+            }
+            
+            let won = false;
+            
+            // Check rows
+            for (let row of grid) {
+                if (row.every(cell => cell.classList.contains('marked'))) {
+                    won = true;
+                    break;
+                }
+            }
+            
+            // Check columns
+            if (!won) {
+                for (let col = 0; col < 5; col++) {
+                    if (grid.every(row => row[col].classList.contains('marked'))) {
+                        won = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Check diagonals
+            if (!won) {
+                if (grid.every((row, i) => row[i].classList.contains('marked'))) {
+                    won = true;
+                }
+                if (grid.every((row, i) => row[4 - i].classList.contains('marked'))) {
+                    won = true;
+                }
+            }
+            
+            if (won) {
+                celebrate();
+            }
+        }
+        
+        function celebrate() {
+            gameState.gamesWon++;
+            localStorage.setItem('gamesWon', gameState.gamesWon);
+            updateStats();
+            
+            // Show win modal
+            setTimeout(() => {
+                document.getElementById('winModal').classList.add('show');
+                
+                // Haptic celebration
+                if (window.navigator.vibrate) {
+                    window.navigator.vibrate([100, 50, 100, 50, 200]);
+                }
+            }, 300);
+        }
+        
+        function closeWinModal() {
+            document.getElementById('winModal').classList.remove('show');
+            resetBingo();
+        }
+        
+        function shareGame() {
+            const markedCount = document.querySelectorAll('.bingo-cell.marked').length;
+            const text = `Ich habe ${markedCount} Felder im Bahn-Bingo markiert! 🚂 Schon ${gameState.gamesWon} mal gewonnen! #BahnBingo #DeutscheBahn`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Bahn-Bingo',
+                    text: text,
+                    url: window.location.href
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                // Fallback: Copy to clipboard
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Text in Zwischenablage kopiert!');
+                });
+            }
+        }
+        
+        // Prevent pull-to-refresh on mobile
+        let lastTouchY = 0;
+        let preventPullToRefresh = false;
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 1) return;
+            lastTouchY = e.touches[0].clientY;
+            preventPullToRefresh = window.pageYOffset === 0;
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            const touchY = e.touches[0].clientY;
+            const touchYDelta = touchY - lastTouchY;
+            lastTouchY = touchY;
+            
+            if (preventPullToRefresh && touchYDelta > 0) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
