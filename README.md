@@ -1,2 +1,0 @@
-# bahn-bingo
-Bahn Bingo
