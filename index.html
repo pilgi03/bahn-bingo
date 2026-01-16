@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bahn-Bingo">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Bahn-Bingo">
+    <meta name="description" content="Das ultimative Bahn-Bingo für deutsche Pendler 🚂">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Bahn-Bingo">
+    <meta property="og:description" content="Verwandle Verspätungen in Siege! 🚂">
+    <meta property="og:type" content="website">
+    
+    <title>Bahn-Bingo</title>
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Fonts - Charaktervolle Auswahl statt generischem Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">🚂</div>
+            <div class="splash-title">BAHN<span>BINGO</span></div>
+            <div class="splash-loader">
+                <div class="loader-track"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen hidden">
+        <div class="login-bg-pattern"></div>
+        <div class="login-card">
+            <div class="login-header">
+                <span class="login-emoji">🚂</span>
+                <h1>BAHN<span>BINGO</span></h1>
+                <p>Verwandle Verspätungen in Siege!</p>
+            </div>
+            
+            <div class="login-form">
+                <div class="input-group">
+                    <input type="text" id="usernameInput" 
+                           placeholder="Dein Spielername" 
+                           maxlength="15"
+                           autocomplete="off"
+                           spellcheck="false">
+                    <span class="input-icon">👤</span>
+                </div>
+                
+                <button class="btn btn-primary btn-lg" id="loginBtn">
+                    <span>Einsteigen</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </div>
+            
+            <div class="login-footer">
+                <p>Über 100 typische Bahn-Situationen warten auf dich</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="main-app hidden">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="user-pill" id="userPill">
+                    <span class="user-avatar" id="headerAvatar">?</span>
+                    <span class="user-name" id="headerName">Spieler</span>
+                    <span class="user-streak" id="headerStreak" title="Aktuelle Siegesserie">🔥 0</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" id="dailyChallengeBtn" title="Tägliche Challenge">
+                    <span class="icon-btn-badge" id="dailyBadge">!</span>
+                    📅
+                </button>
+                <button class="icon-btn" id="achievementsBtn" title="Erfolge">
+                    🏅
+                </button>
+            </div>
+        </header>
+
+        <!-- Daily Challenge Banner -->
+        <div class="daily-banner" id="dailyBanner">
+            <div class="daily-banner-content">
+                <span class="daily-icon">🎯</span>
+                <div class="daily-text">
+                    <strong>Tägliche Challenge</strong>
+                    <span id="dailyChallengeText">Gewinne in unter 10 Minuten</span>
+                </div>
+                <div class="daily-reward">+50 🌟</div>
+            </div>
+            <div class="daily-progress">
+                <div class="daily-progress-bar" id="dailyProgressBar"></div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <main class="game-screen" id="gameScreen">
+            
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-chip">
+                    <span class="stat-value" id="statWins">0</span>
+                    <span class="stat-label">Siege</span>
+                </div>
+                <div class="stat-chip">
+                    <span class="stat-value" id="statGames">0</span>
+                    <span class="stat-label">Spiele</span>
+                </div>
+                <div class="stat-chip">
+                    <span class="stat-value" id="statRate">0%</span>
+                    <span class="stat-label">Quote</span>
+                </div>
+                <div class="stat-chip accent">
+                    <span class="stat-value" id="statTime">00:00</span>
+                    <span class="stat-label">Zeit</span>
+                </div>
+            </div>
+
+            <!-- Bingo Board -->
+            <div class="bingo-container">
+                <div class="bingo-header">
+                    <span>B</span><span>I</span><span>N</span><span>G</span><span>O</span>
+                </div>
+                <div class="bingo-grid" id="bingoGrid">
+                    <!-- Cells generated by JS -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="game-actions">
+                <button class="btn btn-secondary" id="newGameBtn">
+                    🔄 Neues Board
+                </button>
+                <button class="btn btn-primary" id="shareBtn">
+                    📤 Teilen
+                </button>
+            </div>
+
+        </main>
+
+        <!-- Achievements Screen (hidden by default) -->
+        <div class="achievements-screen hidden" id="achievementsScreen">
+            <div class="achievements-header">
+                <button class="back-btn" id="achievementsBackBtn">← Zurück</button>
+                <h2>Erfolge</h2>
+            </div>
+            <div class="achievements-grid" id="achievementsGrid">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="game">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Spielen</span>
+            </button>
+            <button class="nav-item" data-screen="stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Statistik</span>
+            </button>
+            <button class="nav-item" data-screen="leaderboard">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">Rangliste</span>
+            </button>
+            <button class="nav-item" data-screen="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Profil</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Win Celebration Overlay -->
+    <div class="win-overlay hidden" id="winOverlay">
+        <canvas id="confettiCanvas"></canvas>
+        <div class="win-modal">
+            <div class="win-trophy">🏆</div>
+            <h1 class="win-title">BINGO!</h1>
+            <p class="win-subtitle" id="winSubtitle">Glückwunsch!</p>
+            
+            <div class="win-stats">
+                <div class="win-stat">
+                    <span class="win-stat-value" id="winTime">00:00</span>
+                    <span class="win-stat-label">Zeit</span>
+                </div>
+                <div class="win-stat">
+                    <span class="win-stat-value" id="winStreak">1</span>
+                    <span class="win-stat-label">Serie</span>
+                </div>
+                <div class="win-stat">
+                    <span class="win-stat-value" id="winTotal">1</span>
+                    <span class="win-stat-label">Gesamt</span>
+                </div>
+            </div>
+
+            <!-- Achievement Unlock -->
+            <div class="win-achievement hidden" id="winAchievement">
+                <span class="achievement-icon" id="achievementIcon">🎖️</span>
+                <span class="achievement-text" id="achievementText">Erfolg freigeschaltet!</span>
+            </div>
+
+            <!-- Daily Challenge Complete -->
+            <div class="win-daily hidden" id="winDaily">
+                <span>🎯 Tägliche Challenge abgeschlossen! +50 🌟</span>
+            </div>
+            
+            <div class="win-actions">
+                <button class="btn btn-primary btn-lg" id="newRoundBtn">
+                    🎮 Neue Runde
+                </button>
+                <button class="btn btn-ghost" id="shareWinBtn">
+                    📤 Sieg teilen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="events.js"></script>
+    <script src="app.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
