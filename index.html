@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bahn-Bingo">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Bahn-Bingo">
+    <meta name="description" content="Das ultimative Bahn-Bingo für deutsche Pendler 🚂">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Bahn-Bingo">
+    <meta property="og:description" content="Verwandle Verspätungen in Siege! 🚂">
+    <meta property="og:type" content="website">
+    
+    <title>Bahn-Bingo</title>
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Fonts - Charaktervolle Auswahl statt generischem Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">🚂</div>
+            <div class="splash-title">BAHN<span>BINGO</span></div>
+            <div class="splash-loader">
+                <div class="loader-track"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen hidden">
+        <div class="login-bg-pattern"></div>
+        <div class="login-card">
+            <div class="login-header">
+                <span class="login-emoji">🚂</span>
+                <h1>BAHN<span>BINGO</span></h1>
+                <p>Verwandle Verspätungen in Siege!</p>
+            </div>
+            
+            <div class="login-form">
+                <div class="input-group">
+                    <input type="text" id="usernameInput" 
+                           placeholder="Dein Spielername" 
+                           maxlength="15"
+                           autocomplete="off"
+                           spellcheck="false">
+                    <span class="input-icon">👤</span>
+                </div>
+                
+                <button class="btn btn-primary btn-lg" id="loginBtn">
+                    <span>Einsteigen</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </div>
+            
+            <div class="login-footer">
+                <p>Über 100 typische Bahn-Situationen warten auf dich</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="main-app hidden">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="user-pill" id="userPill">
+                    <span class="user-avatar" id="headerAvatar">?</span>
+                    <span class="user-name" id="headerName">Spieler</span>
+                    <span class="user-streak" id="headerStreak" title="Aktuelle Siegesserie">🔥 0</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" id="dailyChallengeBtn" title="Tägliche Challenge">
+                    <span class="icon-btn-badge" id="dailyBadge">!</span>
+                    📅
+                </button>
+                <button class="icon-btn" id="achievementsBtn" title="Erfolge">
+                    🏅
+                </button>
+            </div>
+        </header>
+
+        <!-- Daily Challenge Banner -->
+        <div class="daily-banner" id="dailyBanner">
+            <div class="daily-banner-content">
+                <span class="daily-icon">🎯</span>
+                <div class="daily-text">
+                    <strong>Tägliche Challenge</strong>
+                    <span id="dailyChallengeText">Gewinne in unter 10 Minuten</span>
+                </div>
+                <div class="daily-reward">+50 🌟</div>
+            </div>
+            <div class="daily-progress">
+                <div class="daily-progress-bar" id="dailyProgressBar"></div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <main class="game-screen" id="gameScreen">
+            
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-chip">
+                    <span class="stat-value" id="statWins">0</span>
+                    <span class="stat-label">Siege</span>
+                </div>
+                <div class="stat-chip">
+                    <span class="stat-value" id="statGames">0</span>
+                    <span class="stat-label">Spiele</span>
+                </div>
+                <div class="stat-chip">
+                    <span class="stat-value" id="statRate">0%</span>
+                    <span class="stat-label">Quote</span>
+                </div>
+                <div class="stat-chip accent">
+                    <span class="stat-value" id="statTime">00:00</span>
+                    <span class="stat-label">Zeit</span>
+                </div>
+            </div>
+
+            <!-- Bingo Board -->
+            <div class="bingo-container">
+                <div class="bingo-header">
+                    <span>B</span><span>I</span><span>N</span><span>G</span><span>O</span>
+                </div>
+                <div class="bingo-grid" id="bingoGrid">
+                    <!-- Cells generated by JS -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="game-actions">
+                <button class="btn btn-secondary" id="newGameBtn">
+                    🔄 Neues Board
+                </button>
+                <button class="btn btn-primary" id="shareBtn">
+                    📤 Teilen
+                </button>
+            </div>
+
+        </main>
+
+        <!-- Achievements Screen (hidden by default) -->
+        <div class="achievements-screen hidden" id="achievementsScreen">
+            <div class="achievements-header">
+                <button class="back-btn" id="achievementsBackBtn">← Zurück</button>
+                <h2>Erfolge</h2>
+            </div>
+            <div class="achievements-grid" id="achievementsGrid">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+        <!-- Statistics Screen -->
+        <div class="screen-overlay hidden" id="statsScreen">
+            <div class="screen-header">
+                <button class="back-btn" id="statsBackBtn">← Zurück</button>
+                <h2>📊 Statistik</h2>
+            </div>
+            
+            <div class="stats-content">
+                <!-- Main Stats Cards -->
+                <div class="stats-grid-main">
+                    <div class="stat-card big">
+                        <span class="stat-card-value" id="statsWins">0</span>
+                        <span class="stat-card-label">Siege</span>
+                        <span class="stat-card-icon">🏆</span>
+                    </div>
+                    <div class="stat-card big">
+                        <span class="stat-card-value" id="statsPlayed">0</span>
+                        <span class="stat-card-label">Gespielt</span>
+                        <span class="stat-card-icon">🎮</span>
+                    </div>
+                </div>
+
+                <!-- Win Rate Circle -->
+                <div class="winrate-card">
+                    <div class="winrate-circle">
+                        <svg viewBox="0 0 100 100">
+                            <defs>
+                                <linearGradient id="winrateGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#ec1c24"/>
+                                    <stop offset="100%" style="stop-color:#ff6b6b"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="winrate-bg" cx="50" cy="50" r="45"/>
+                            <circle class="winrate-fill" id="winrateCircle" cx="50" cy="50" r="45"/>
+                        </svg>
+                        <div class="winrate-text">
+                            <span class="winrate-value" id="statsWinrate">0%</span>
+                            <span class="winrate-label">Gewinnrate</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Stats -->
+                <div class="stats-section">
+                    <h3>⏱️ Zeiten</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-card-value" id="statsBestTime">--:--</span>
+                            <span class="stat-card-label">Beste Zeit</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-value" id="statsAvgTime">--:--</span>
+                            <span class="stat-card-label">Ø Zeit</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-value" id="statsTotalTime">0h</span>
+                            <span class="stat-card-label">Gesamt</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Streak Stats -->
+                <div class="stats-section">
+                    <h3>🔥 Serien</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-card-value" id="statsCurrentStreak">0</span>
+                            <span class="stat-card-label">Aktuell</span>
+                        </div>
+                        <div class="stat-card highlight">
+                            <span class="stat-card-value" id="statsBestStreak">0</span>
+                            <span class="stat-card-label">Rekord</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Graph -->
+                <div class="stats-section">
+                    <h3>📈 Letzte 7 Tage</h3>
+                    <div class="graph-container">
+                        <div class="graph-bars" id="weeklyGraph">
+                            <!-- Generated by JS -->
+                        </div>
+                        <div class="graph-labels" id="weeklyLabels">
+                            <!-- Generated by JS -->
+                        </div>
+                    </div>
+                    <div class="graph-summary">
+                        <span>Diese Woche: <strong id="statsWeekWins">0</strong> Siege</span>
+                        <span>Heute: <strong id="statsTodayWins">0</strong></span>
+                    </div>
+                </div>
+
+                <!-- Achievements Progress -->
+                <div class="stats-section">
+                    <h3>🏅 Erfolge</h3>
+                    <div class="achievements-progress">
+                        <div class="achievements-progress-bar">
+                            <div class="achievements-progress-fill" id="achievementsFill"></div>
+                        </div>
+                        <span class="achievements-progress-text" id="achievementsProgress">0 / 19</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-card-value" id="statsTotalStars">0</span>
+                            <span class="stat-card-label">⭐ Sterne</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-card-value" id="statsDailies">0</span>
+                            <span class="stat-card-label">📅 Dailies</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Screen -->
+        <div class="screen-overlay hidden" id="profileScreen">
+            <div class="screen-header">
+                <button class="back-btn" id="profileBackBtn">← Zurück</button>
+                <h2>👤 Profil</h2>
+            </div>
+            
+            <div class="profile-content">
+                <!-- User Card -->
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileAvatar">?</div>
+                    <div class="profile-name-section">
+                        <h3 id="profileName">Spieler</h3>
+                        <span class="profile-since">Dabei seit <span id="profileSince">--</span></span>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" id="editNameBtn">✏️</button>
+                </div>
+
+                <!-- Edit Name Modal (inline) -->
+                <div class="edit-name-section hidden" id="editNameSection">
+                    <div class="input-group">
+                        <input type="text" id="newNameInput" placeholder="Neuer Name" maxlength="15">
+                        <span class="input-icon">👤</span>
+                    </div>
+                    <div class="edit-name-actions">
+                        <button class="btn btn-ghost" id="cancelNameBtn">Abbrechen</button>
+                        <button class="btn btn-primary" id="saveNameBtn">Speichern</button>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="profile-stats-row">
+                    <div class="profile-stat">
+                        <span class="profile-stat-value" id="profileWins">0</span>
+                        <span class="profile-stat-label">Siege</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-value" id="profileStreak">0</span>
+                        <span class="profile-stat-label">Beste Serie</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-value" id="profileStars">0</span>
+                        <span class="profile-stat-label">Sterne</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="profile-section">
+                    <h4>Einstellungen</h4>
+                    
+                    <button class="profile-action-btn" id="shareProfileBtn">
+                        <span class="profile-action-icon">📤</span>
+                        <span class="profile-action-text">Profil teilen</span>
+                        <span class="profile-action-arrow">→</span>
+                    </button>
+                    
+                    <button class="profile-action-btn" id="exportDataBtn">
+                        <span class="profile-action-icon">💾</span>
+                        <span class="profile-action-text">Daten exportieren</span>
+                        <span class="profile-action-arrow">→</span>
+                    </button>
+                    
+                    <button class="profile-action-btn" id="importDataBtn">
+                        <span class="profile-action-icon">📥</span>
+                        <span class="profile-action-text">Daten importieren</span>
+                        <span class="profile-action-arrow">→</span>
+                    </button>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="profile-section danger">
+                    <h4>Gefahrenzone</h4>
+                    
+                    <button class="profile-action-btn danger" id="resetStatsBtn">
+                        <span class="profile-action-icon">🗑️</span>
+                        <span class="profile-action-text">Statistiken zurücksetzen</span>
+                        <span class="profile-action-arrow">→</span>
+                    </button>
+                    
+                    <button class="profile-action-btn danger" id="logoutBtn">
+                        <span class="profile-action-icon">🚪</span>
+                        <span class="profile-action-text">Abmelden & Daten löschen</span>
+                        <span class="profile-action-arrow">→</span>
+                    </button>
+                </div>
+
+                <!-- Legal Links -->
+                <div class="profile-section legal">
+                    <h4>Rechtliches</h4>
+                    
+                    <a href="privacy.html" class="profile-action-btn">
+                        <span class="profile-action-icon">🔒</span>
+                        <span class="profile-action-text">Datenschutzerklärung</span>
+                        <span class="profile-action-arrow">→</span>
+                    </a>
+                    
+                    <a href="impressum.html" class="profile-action-btn">
+                        <span class="profile-action-icon">📄</span>
+                        <span class="profile-action-text">Impressum</span>
+                        <span class="profile-action-arrow">→</span>
+                    </a>
+                </div>
+
+                <!-- App Info -->
+                <div class="profile-footer">
+                    <p>Bahn-Bingo v2.0</p>
+                    <p>Made with ❤️ und Verspätungen</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Modal -->
+        <div class="confirm-modal hidden" id="confirmModal">
+            <div class="confirm-modal-content">
+                <h3 id="confirmTitle">Bist du sicher?</h3>
+                <p id="confirmText">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+                <div class="confirm-actions">
+                    <button class="btn btn-ghost" id="confirmCancel">Abbrechen</button>
+                    <button class="btn btn-danger" id="confirmOk">Bestätigen</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Modal -->
+        <div class="confirm-modal hidden" id="importModal">
+            <div class="confirm-modal-content">
+                <h3>Daten importieren</h3>
+                <p>Füge deinen Export-Code ein:</p>
+                <textarea id="importTextarea" placeholder="Export-Code hier einfügen..."></textarea>
+                <div class="confirm-actions">
+                    <button class="btn btn-ghost" id="importCancel">Abbrechen</button>
+                    <button class="btn btn-primary" id="importOk">Importieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="game">
+                <span class="nav-icon">🎮</span>
+                <span class="nav-label">Spielen</span>
+            </button>
+            <button class="nav-item" data-screen="stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Statistik</span>
+            </button>
+            <button class="nav-item" data-screen="leaderboard">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">Rangliste</span>
+            </button>
+            <button class="nav-item" data-screen="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Profil</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Win Celebration Overlay -->
+    <div class="win-overlay hidden" id="winOverlay">
+        <canvas id="confettiCanvas"></canvas>
+        <div class="win-modal">
+            <div class="win-trophy">🏆</div>
+            <h1 class="win-title">BINGO!</h1>
+            <p class="win-subtitle" id="winSubtitle">Glückwunsch!</p>
+            
+            <div class="win-stats">
+                <div class="win-stat">
+                    <span class="win-stat-value" id="winTime">00:00</span>
+                    <span class="win-stat-label">Zeit</span>
+                </div>
+                <div class="win-stat">
+                    <span class="win-stat-value" id="winStreak">1</span>
+                    <span class="win-stat-label">Serie</span>
+                </div>
+                <div class="win-stat">
+                    <span class="win-stat-value" id="winTotal">1</span>
+                    <span class="win-stat-label">Gesamt</span>
+                </div>
+            </div>
+
+            <!-- Achievement Unlock -->
+            <div class="win-achievement hidden" id="winAchievement">
+                <span class="achievement-icon" id="achievementIcon">🎖️</span>
+                <span class="achievement-text" id="achievementText">Erfolg freigeschaltet!</span>
+            </div>
+
+            <!-- Daily Challenge Complete -->
+            <div class="win-daily hidden" id="winDaily">
+                <span>🎯 Tägliche Challenge abgeschlossen! +50 🌟</span>
+            </div>
+            
+            <div class="win-actions">
+                <button class="btn btn-primary btn-lg" id="newRoundBtn">
+                    🎮 Neue Runde
+                </button>
+                <button class="btn btn-ghost" id="shareWinBtn">
+                    📤 Sieg teilen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="events.js"></script>
+    <script src="app.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

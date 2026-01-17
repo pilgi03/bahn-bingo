@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datenschutzerklärung - Bahn-Bingo</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .legal-page {
+            min-height: 100vh;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: var(--space-lg);
+            padding-bottom: var(--space-2xl);
+        }
+        
+        .legal-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+            padding-top: var(--safe-top);
+        }
+        
+        .legal-header a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1rem;
+        }
+        
+        .legal-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .legal-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .legal-content h2 {
+            font-size: 1.2rem;
+            color: var(--accent-secondary);
+            margin-top: var(--space-xl);
+            margin-bottom: var(--space-md);
+        }
+        
+        .legal-content h3 {
+            font-size: 1rem;
+            margin-top: var(--space-lg);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .legal-content p, .legal-content li {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: var(--space-md);
+        }
+        
+        .legal-content ul {
+            padding-left: var(--space-lg);
+            margin-bottom: var(--space-md);
+        }
+        
+        .legal-content a {
+            color: var(--accent-secondary);
+        }
+        
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: var(--space-xl);
+        }
+    </style>
+</head>
+<body>
+    <div class="legal-page">
+        <div class="legal-header">
+            <a href="index.html">← Zurück</a>
+            <h1>🔒 Datenschutz</h1>
+        </div>
+        
+        <div class="legal-content">
+            <p class="last-updated">Stand: Januar 2025</p>
+
+            <h2>1. Verantwortlicher</h2>
+            <p>
+                Verantwortlich für die Datenverarbeitung ist:<br>
+                <strong>[DEIN NAME]</strong><br>
+                [DEINE ADRESSE]<br>
+                E-Mail: [DEINE EMAIL]
+            </p>
+
+            <h2>2. Welche Daten werden erhoben?</h2>
+            <p>Bahn-Bingo erhebt und speichert <strong>nur lokale Daten</strong> auf deinem Gerät:</p>
+            <ul>
+                <li>Dein selbst gewählter Spielername</li>
+                <li>Spielstatistiken (Siege, gespielte Runden, Zeiten)</li>
+                <li>Freigeschaltete Achievements</li>
+                <li>Einstellungen</li>
+            </ul>
+            <p><strong>Wichtig:</strong> Diese Daten werden ausschließlich lokal in deinem Browser gespeichert (localStorage) und <strong>niemals an einen Server übertragen</strong>.</p>
+
+            <h2>3. Keine Server-Kommunikation</h2>
+            <p>Bahn-Bingo ist eine rein clientseitige Anwendung. Es gibt:</p>
+            <ul>
+                <li>Keine Benutzerkonten auf einem Server</li>
+                <li>Keine Datenübertragung an Dritte</li>
+                <li>Keine Tracking-Tools oder Analytics</li>
+                <li>Keine Cookies (außer technisch notwendigen für PWA)</li>
+                <li>Keine Werbung</li>
+            </ul>
+
+            <h2>4. Lokale Datenspeicherung</h2>
+            <p>Die App nutzt die localStorage-API deines Browsers, um Spielstände zu speichern. Diese Daten:</p>
+            <ul>
+                <li>Verlassen niemals dein Gerät</li>
+                <li>Können jederzeit von dir gelöscht werden (Profil → Abmelden)</li>
+                <li>Werden bei Löschen der Browser-Daten automatisch entfernt</li>
+            </ul>
+
+            <h2>5. Service Worker & Offline-Funktionalität</h2>
+            <p>Die App nutzt einen Service Worker, um offline zu funktionieren. Dabei werden App-Dateien (HTML, CSS, JavaScript) lokal zwischengespeichert. Es werden keine persönlichen Daten im Service Worker Cache gespeichert.</p>
+
+            <h2>6. Deine Rechte</h2>
+            <p>Da alle Daten lokal auf deinem Gerät gespeichert werden, hast du jederzeit die volle Kontrolle:</p>
+            <ul>
+                <li><strong>Auskunft:</strong> Alle Daten sind in der App unter "Profil" einsehbar</li>
+                <li><strong>Export:</strong> Du kannst deine Daten jederzeit exportieren</li>
+                <li><strong>Löschung:</strong> Über "Profil → Abmelden" werden alle Daten gelöscht</li>
+                <li><strong>Datenübertragbarkeit:</strong> Export/Import-Funktion verfügbar</li>
+            </ul>
+
+            <h2>7. Hosting</h2>
+            <p>Die App wird über GitHub Pages gehostet. GitHub kann dabei technische Zugriffsdaten (IP-Adresse, Browsertyp, Zugriffszeit) in Server-Logs speichern. Details hierzu findest du in der <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank">GitHub Privacy Policy</a>.</p>
+
+            <h2>8. Änderungen</h2>
+            <p>Diese Datenschutzerklärung kann bei Bedarf aktualisiert werden. Die aktuelle Version ist immer in der App verfügbar.</p>
+
+            <h2>9. Kontakt</h2>
+            <p>Bei Fragen zum Datenschutz kannst du mich unter [DEINE EMAIL] erreichen.</p>
+        </div>
+    </div>
+</body>
+</html>
